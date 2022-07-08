@@ -38,7 +38,7 @@ DEFS += STC8
 ROOT_DIR     = .
 
 # define include dir
-INCLUDE_DIRS = WavetableSynthesizer
+INCLUDE_DIRS = .
 
 # define lib dir
 LIBDIR   = 
@@ -47,7 +47,8 @@ LIBDIR   =
 
 SRC 	+= main.c
 SRC 	+= Bsp.c
-
+SRC 	+= st7032.c
+SRC 	+= I2C.c
 ASM_SRC =
 
 
