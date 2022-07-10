@@ -79,7 +79,8 @@ void I2C_Init(I2C_InitTypeDef *I2Cx)
 //========================================================================
 void Wait()
 {
-	while (!(I2CMSST & 0x40))
+	uint16_t timeOut = 0xFFFF;
+	while (!(I2CMSST & 0x40) && (timeOut--))
 		;
 	I2CMSST &= ~0x40;
 }
