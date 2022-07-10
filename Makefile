@@ -49,6 +49,7 @@ SRC 	+= main.c
 SRC 	+= Bsp.c
 SRC 	+= st7032.c
 SRC 	+= I2C.c
+SRC 	+= usb.c
 ASM_SRC =
 
 

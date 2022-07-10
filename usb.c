@@ -1,0 +1,629 @@
+#include "RegisterDefine.h"
+#include <stdint.h>
+
+typedef unsigned char BYTE;
+typedef unsigned int WORD;
+typedef unsigned long DWORD;
+
+#define IRC48MCR (*(__xdata unsigned char volatile *)0xfe07)
+
+#define FADDR 0
+#define POWER 1
+#define INTRIN1 2
+#define EP5INIF 0x20
+#define EP4INIF 0x10
+#define EP3INIF 0x08
+#define EP2INIF 0x04
+#define EP1INIF 0x02
+#define EP0IF 0x01
+#define INTROUT1 4
+#define EP5OUTIF 0x20
+#define EP4OUTIF 0x10
+#define EP3OUTIF 0x08
+#define EP2OUTIF 0x04
+#define EP1OUTIF 0x02
+#define INTRUSB 6
+#define SOFIF 0x08
+#define RSTIF 0x04
+#define RSUIF 0x02
+#define SUSIF 0x01
+#define INTRIN1E 7
+#define EP5INIE 0x20
+#define EP4INIE 0x10
+#define EP3INIE 0x08
+#define EP2INIE 0x04
+#define EP1INIE 0x02
+#define EP0IE 0x01
+#define INTROUT1E 9
+#define EP5OUTIE 0x20
+#define EP4OUTIE 0x10
+#define EP3OUTIE 0x08
+#define EP2OUTIE 0x04
+#define EP1OUTIE 0x02
+#define INTRUSBE 11
+#define SOFIE 0x08
+#define RSTIE 0x04
+#define RSUIE 0x02
+#define SUSIE 0x01
+#define FRAME1 12
+#define FRAME2 13
+#define INDEX 14
+#define INMAXP 16
+#define CSR0 17
+#define SSUEND 0x80
+#define SOPRDY 0x40
+#define SDSTL 0x20
+#define SUEND 0x10
+#define DATEND 0x08
+#define STSTL 0x04
+#define IPRDY 0x02
+#define OPRDY 0x01
+#define INCSR1 17
+#define INCLRDT 0x40
+#define INSTSTL 0x20
+#define INSDSTL 0x10
+#define INFLUSH 0x08
+#define INUNDRUN 0x04
+#define INFIFONE 0x02
+#define INIPRDY 0x01
+#define INCSR2 18
+#define INAUTOSET 0x80
+#define INISO 0x40
+#define INMODEIN 0x20
+#define INMODEOUT 0x00
+#define INENDMA 0x10
+#define INFCDT 0x08
+#define OUTMAXP 19
+#define OUTCSR1 20
+#define OUTCLRDT 0x80
+#define OUTSTSTL 0x40
+#define OUTSDSTL 0x20
+#define OUTFLUSH 0x10
+#define OUTDATERR 0x08
+#define OUTOVRRUN 0x04
+#define OUTFIFOFUL 0x02
+#define OUTOPRDY 0x01
+#define OUTCSR2 21
+#define OUTAUTOCLR 0x80
+#define OUTISO 0x40
+#define OUTENDMA 0x20
+#define OUTDMAMD 0x10
+#define COUNT0 22
+#define OUTCOUNT1 22
+#define OUTCOUNT2 23
+#define FIFO0 32
+#define FIFO1 33
+#define FIFO2 34
+#define FIFO3 35
+#define FIFO4 36
+#define FIFO5 37
+#define UTRKCTL 48
+#define UTRKSTS 49
+
+#define EPIDLE 0
+#define EPSTATUS 1
+#define EPDATAIN 2
+#define EPDATAOUT 3
+#define EPSTALL -1
+
+#define GET_STATUS 0x00
+#define CLEAR_FEATURE 0x01
+#define SET_FEATURE 0x03
+#define SET_ADDRESS 0x05
+#define GET_DESCRIPTOR 0x06
+#define SET_DESCRIPTOR 0x07
+#define GET_CONFIG 0x08
+#define SET_CONFIG 0x09
+#define GET_INTERFACE 0x0A
+#define SET_INTERFACE 0x0B
+#define SYNCH_FRAME 0x0C
+
+#define GET_REPORT 0x01
+#define GET_IDLE 0x02
+#define GET_PROTOCOL 0x03
+#define SET_REPORT 0x09
+#define SET_IDLE 0x0A
+#define SET_PROTOCOL 0x0B
+
+#define DESC_DEVICE 0x01
+#define DESC_CONFIG 0x02
+#define DESC_STRING 0x03
+#define DESC_HIDREPORT 0x22
+
+#define STANDARD_REQUEST 0x00
+#define CLASS_REQUEST 0x20
+#define VENDOR_REQUEST 0x40
+#define REQUEST_MASK 0x60
+
+typedef struct
+{
+    BYTE bmRequestType;
+    BYTE bRequest;
+    BYTE wValueL;
+    BYTE wValueH;
+    BYTE wIndexL;
+    BYTE wIndexH;
+    BYTE wLengthL;
+    BYTE wLengthH;
+} SETUP;
+
+typedef struct
+{
+    signed char bStage;
+    WORD wResidue;
+    BYTE *pData;
+} EP0STAGE;
+
+void UsbInit();
+BYTE ReadReg(BYTE addr);
+void WriteReg(BYTE addr, BYTE dat);
+BYTE ReadFifo(BYTE fifo, BYTE *pdat);
+void WriteFifo(BYTE fifo, BYTE *pdat, BYTE cnt);
+
+__code char DEVICEDESC[18];
+__code char CONFIGDESC[41];
+__code char HIDREPORTDESC[27];
+__code char LANGIDDESC[4];
+__code char MANUFACTDESC[8];
+__code char PRODUCTDESC[30];
+
+SETUP Setup;
+EP0STAGE Ep0Stage;
+__xdata BYTE  HidFreature[64];
+__xdata BYTE  HidInput[64];
+__xdata BYTE  HidOutput[64];
+
+// void main()
+// {
+//     P0M0 = 0x00;
+//     P0M1 = 0x00;
+//     P1M0 = 0x00;
+//     P1M1 = 0x00;
+//     P2M0 = 0x00;
+//     P2M1 = 0x00;
+//     P3M0 = 0x00;
+//     P3M1 = 0x00;
+//     P4M0 = 0x00;
+//     P4M1 = 0x00;
+//     P5M0 = 0x00;
+//     P5M1 = 0x00;
+
+//     UsbInit();
+
+//     IE2 = 0x80;
+//     EA = 1;
+
+//     while (1);
+// }
+
+BYTE ReadReg(BYTE addr)
+{
+    BYTE dat;
+
+    while (USBADR & 0x80)
+        ;
+    USBADR = addr | 0x80;
+    while (USBADR & 0x80)
+        ;
+    dat = USBDAT;
+
+    return dat;
+}
+
+void WriteReg(BYTE addr, BYTE dat)
+{
+    while (USBADR & 0x80)
+        ;
+    USBADR = addr & 0x7f;
+    USBDAT = dat;
+}
+
+BYTE ReadFifo(BYTE fifo, BYTE *pdat)
+{
+    BYTE cnt;
+    BYTE ret;
+
+    ret = cnt = ReadReg(COUNT0);
+    while (cnt--)
+    {
+        *pdat++ = ReadReg(fifo);
+    }
+
+    return ret;
+}
+
+void WriteFifo(BYTE fifo, BYTE *pdat, BYTE cnt)
+{
+    while (cnt--)
+    {
+        WriteReg(fifo, *pdat++);
+    }
+}
+
+void UsbInit()
+{
+    P3M0 = 0x00;
+    P3M1 = 0x03;
+
+    P_SW2 |= 0x80;
+    IRC48MCR = 0x80;
+    while (!(IRC48MCR & 0x01))
+        ;
+    P_SW2 &= ~0x80;
+    USBCLK = 0x00;
+    USBCON = 0x90;
+
+    WriteReg(FADDR, 0x00);
+    WriteReg(POWER, 0x08);
+    WriteReg(INTRIN1E, 0x3f);
+    WriteReg(INTROUT1E, 0x3f);
+    WriteReg(INTRUSBE, 0x00);
+    WriteReg(POWER, 0x01);
+
+    Ep0Stage.bStage = EPIDLE;
+}
+
+void usb_isr()  __interrupt(USB_VECTOR)
+{
+    BYTE intrusb;
+    BYTE intrin;
+    BYTE introut;
+    BYTE csr;
+    BYTE cnt;
+    WORD len;
+
+    intrusb = ReadReg(INTRUSB);
+    intrin = ReadReg(INTRIN1);
+    introut = ReadReg(INTROUT1);
+
+    if (intrusb & RSTIF)
+    {
+        WriteReg(INDEX, 1);
+        WriteReg(INCSR1, INCLRDT);
+        WriteReg(INDEX, 1);
+        WriteReg(OUTCSR1, OUTCLRDT);
+        Ep0Stage.bStage = EPIDLE;
+    }
+
+    if (intrin & EP0IF)
+    {
+        WriteReg(INDEX, 0);
+        csr = ReadReg(CSR0);
+        if (csr & STSTL)
+        {
+            WriteReg(CSR0, csr & ~STSTL);
+            Ep0Stage.bStage = EPIDLE;
+        }
+        if (csr & SUEND)
+        {
+            WriteReg(CSR0, csr | SSUEND);
+        }
+
+        switch (Ep0Stage.bStage)
+        {
+        case EPIDLE:
+            if (csr & OPRDY)
+            {
+                Ep0Stage.bStage = EPSTATUS;
+                ReadFifo(FIFO0, (BYTE *)&Setup);
+                ((BYTE *)&Ep0Stage.wResidue)[0] = Setup.wLengthH;
+                ((BYTE *)&Ep0Stage.wResidue)[1] = Setup.wLengthL;
+                switch (Setup.bmRequestType & REQUEST_MASK)
+                {
+                case STANDARD_REQUEST:
+                    switch (Setup.bRequest)
+                    {
+                    case SET_ADDRESS:
+                        WriteReg(FADDR, Setup.wValueL);
+                        break;
+                    case SET_CONFIG:
+                        WriteReg(INDEX, 1);
+                        WriteReg(INCSR2, INMODEIN);
+                        WriteReg(INMAXP, 8);
+                        WriteReg(INDEX, 1);
+                        WriteReg(INCSR2, INMODEOUT);
+                        WriteReg(OUTMAXP, 8);
+                        WriteReg(INDEX, 0);
+                        break;
+                    case GET_DESCRIPTOR:
+                        Ep0Stage.bStage = EPDATAIN;
+                        switch (Setup.wValueH)
+                        {
+                        case DESC_DEVICE:
+                            Ep0Stage.pData = (BYTE*)DEVICEDESC;
+                            len = sizeof(DEVICEDESC);
+                            break;
+                        case DESC_CONFIG:
+                            Ep0Stage.pData = CONFIGDESC;
+                            len = sizeof(CONFIGDESC);
+                            break;
+                        case DESC_STRING:
+                            switch (Setup.wValueL)
+                            {
+                            case 0:
+                                Ep0Stage.pData = (BYTE*)LANGIDDESC;
+                                len = sizeof(LANGIDDESC);
+                                break;
+                            case 1:
+                                Ep0Stage.pData = MANUFACTDESC;
+                                len = sizeof(MANUFACTDESC);
+                                break;
+                            case 2:
+                                Ep0Stage.pData = PRODUCTDESC;
+                                len = sizeof(PRODUCTDESC);
+                                break;
+                            default:
+                                Ep0Stage.bStage = EPSTALL;
+                                break;
+                            }
+                            break;
+                        case DESC_HIDREPORT:
+                            Ep0Stage.pData = HIDREPORTDESC;
+                            len = sizeof(HIDREPORTDESC);
+                            break;
+                        default:
+                            Ep0Stage.bStage = EPSTALL;
+                            break;
+                        }
+                        if (len < Ep0Stage.wResidue)
+                        {
+                            Ep0Stage.wResidue = len;
+                        }
+                        break;
+                    default:
+                        Ep0Stage.bStage = EPSTALL;
+                        break;
+                    }
+                    break;
+                case CLASS_REQUEST:
+                    switch (Setup.bRequest)
+                    {
+                    case GET_REPORT:
+                        Ep0Stage.pData = HidFreature;
+                        Ep0Stage.bStage = EPDATAIN;
+                        break;
+                    case SET_REPORT:
+                        Ep0Stage.pData = HidFreature;
+                        Ep0Stage.bStage = EPDATAOUT;
+                        break;
+                    case SET_IDLE:
+                        break;
+                    case GET_IDLE:
+                    case GET_PROTOCOL:
+                    case SET_PROTOCOL:
+                    default:
+                        Ep0Stage.bStage = EPSTALL;
+                        break;
+                    }
+                    break;
+                default:
+                    Ep0Stage.bStage = EPSTALL;
+                    break;
+                }
+
+                switch (Ep0Stage.bStage)
+                {
+                case EPDATAIN:
+                    WriteReg(CSR0, SOPRDY);
+                    goto L_Ep0SendData;
+                    break;
+                case EPDATAOUT:
+                    WriteReg(CSR0, SOPRDY);
+                    break;
+                case EPSTATUS:
+                    WriteReg(CSR0, SOPRDY | DATEND);
+                    Ep0Stage.bStage = EPIDLE;
+                    break;
+                case EPSTALL:
+                    WriteReg(CSR0, SOPRDY | SDSTL);
+                    Ep0Stage.bStage = EPIDLE;
+                    break;
+                }
+            }
+            break;
+        case EPDATAIN:
+            if (!(csr & IPRDY))
+            {
+            L_Ep0SendData:
+                cnt = Ep0Stage.wResidue > 64 ? 64 : Ep0Stage.wResidue;
+                WriteFifo(FIFO0, Ep0Stage.pData, cnt);
+                Ep0Stage.wResidue -= cnt;
+                Ep0Stage.pData += cnt;
+                if (Ep0Stage.wResidue == 0)
+                {
+                    WriteReg(CSR0, IPRDY | DATEND);
+                    Ep0Stage.bStage = EPIDLE;
+                }
+                else
+                {
+                    WriteReg(CSR0, IPRDY);
+                }
+            }
+            break;
+        case EPDATAOUT:
+            if (csr & OPRDY)
+            {
+                cnt = ReadFifo(FIFO0, Ep0Stage.pData);
+                Ep0Stage.wResidue -= cnt;
+                Ep0Stage.pData += cnt;
+                if (Ep0Stage.wResidue == 0)
+                {
+                    WriteReg(CSR0, SOPRDY | DATEND);
+                    Ep0Stage.bStage = EPIDLE;
+                }
+                else
+                {
+                    WriteReg(CSR0, SOPRDY);
+                }
+            }
+            break;
+        }
+    }
+
+    if (intrin & EP1INIF)
+    {
+        WriteReg(INDEX, 1);
+        csr = ReadReg(INCSR1);
+        if (csr & INSTSTL)
+        {
+            WriteReg(INCSR1, INCLRDT);
+        }
+        if (csr & INUNDRUN)
+        {
+            WriteReg(INCSR1, 0);
+        }
+    }
+
+    if (introut & EP1OUTIF)
+    {
+        WriteReg(INDEX, 1);
+        csr = ReadReg(OUTCSR1);
+        if (csr & OUTSTSTL)
+        {
+            WriteReg(OUTCSR1, OUTCLRDT);
+        }
+        if (csr & OUTOPRDY)
+        {
+            ReadFifo(FIFO1, HidOutput);
+            WriteReg(OUTCSR1, 0);
+
+            WriteReg(INDEX, 1);
+            WriteFifo(FIFO1, HidOutput, 64);
+            WriteReg(INCSR1, INIPRDY);
+        }
+    }
+}
+
+__code char DEVICEDESC[18] =
+    {
+        0x12,       // bLength(18);
+        0x01,       // bDescriptorType(Device);
+        0x00, 0x02, // bcdUSB(2.00);
+        0x00,       // bDeviceClass(0);
+        0x00,       // bDeviceSubClass0);
+        0x00,       // bDeviceProtocol(0);
+        0x40,       // bMaxPacketSize0(64);
+        0x54, 0x53, // idVendor(5354);
+        0x80, 0x43, // idProduct(4380);
+        0x00, 0x01, // bcdDevice(1.00);
+        0x01,       // iManufacturer(1);
+        0x02,       // iProduct(2);
+        0x00,       // iSerialNumber(0);
+        0x01,       // bNumConfigurations(1);
+};
+
+__code char CONFIGDESC[41] =
+    {
+        0x09,       // bLength(9);
+        0x02,       // bDescriptorType(Configuration);
+        0x29, 0x00, // wTotalLength(41);
+        0x01,       // bNumInterfaces(1);
+        0x01,       // bConfigurationValue(1);
+        0x00,       // iConfiguration(0);
+        0x80,       // bmAttributes(BUSPower);
+        0x32,       // MaxPower(100mA);
+
+        0x09, // bLength(9);
+        0x04, // bDescriptorType(Interface);
+        0x00, // bInterfaceNumber(0);
+        0x00, // bAlternateSetting(0);
+        0x02, // bNumEndpoints(2);
+        0x03, // bInterfaceClass(HID);
+        0x00, // bInterfaceSubClass(0);
+        0x00, // bInterfaceProtocol(0);
+        0x00, // iInterface(0);
+
+        0x09,       // bLength(9);
+        0x21,       // bDescriptorType(HID);
+        0x01, 0x01, // bcdHID(1.01);
+        0x00,       // bCountryCode(0);
+        0x01,       // bNumDescriptors(1);
+        0x22,       // bDescriptorType(HID Report);
+        0x1b, 0x00, // wDescriptorLength(27);
+
+        0x07,       // bLength(7);
+        0x05,       // bDescriptorType(Endpoint);
+        0x81,       // bEndpointAddress(EndPoint1 as IN);
+        0x03,       // bmAttributes(Interrupt);
+        0x40, 0x00, // wMaxPacketSize(64);
+        0x01,       // bInterval(10ms);
+
+        0x07,       // bLength(7);
+        0x05,       // bDescriptorType(Endpoint);
+        0x01,       // bEndpointAddress(EndPoint1 as OUT);
+        0x03,       // bmAttributes(Interrupt);
+        0x40, 0x00, // wMaxPacketSize(64);
+        0x01,       // bInterval(10ms);
+};
+
+__code char HIDREPORTDESC[27] =
+    {
+        0x05, 0x0c, // USAGE_PAGE(Consumer);
+        0x09, 0x01, // USAGE(Consumer Control);
+        0xa1, 0x01, // COLLECTION(Application);
+        0x15, 0x00, //  LOGICAL_MINIMUM(0);
+        0x25, 0xff, //  LOGICAL_MAXIMUM(255);
+        0x75, 0x08, //  REPORT_SIZE(8);
+        0x95, 0x40, //  REPORT_COUNT(64);
+        0x09, 0x01, //  USAGE(Consumer Control);
+        0xb1, 0x02, //  FEATURE(Data,Variable);
+        0x09, 0x01, //  USAGE(Consumer Control);
+        0x81, 0x02, //  INPUT(Data,Variable);
+        0x09, 0x01, //  USAGE(Consumer Control);
+        0x91, 0x02, //  OUTPUT(Data,Variable);
+        0xc0,       // END_COLLECTION;
+};
+
+__code char LANGIDDESC[4] =
+    {
+        0x04,
+        0x03,
+        0x09,
+        0x04,
+};
+
+__code char MANUFACTDESC[8] =
+    {
+        0x08,
+        0x03,
+        'S',
+        0,
+        'T',
+        0,
+        'C',
+        0,
+};
+
+__code char PRODUCTDESC[30] =
+    {
+        0x1e,
+        0x03,
+        'S',
+        0,
+        'T',
+        0,
+        'C',
+        0,
+        ' ',
+        0,
+        'U',
+        0,
+        'S',
+        0,
+        'B',
+        0,
+        ' ',
+        0,
+        'D',
+        0,
+        'e',
+        0,
+        'v',
+        0,
+        'i',
+        0,
+        'c',
+        0,
+        'e',
+        0,
+};
