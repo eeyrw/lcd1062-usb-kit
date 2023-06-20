@@ -24,7 +24,7 @@
 */
 
 #include "ST7032.h"
-
+#include "fw_hal.h"
 // private methods
 
 void setDisplayControl(uint8_t setBit)
@@ -68,6 +68,23 @@ void st7032_init(uint8_t i2c_addr)
     _displaycontrol = 0x00;
     _displaymode = 0x00;
     _i2c_addr = i2c_addr;
+
+    // Master mode
+    I2C_SetWorkMode(I2C_WorkMode_Master);
+    /**
+     * I2C clock = FOSC / 2 / (__prescaler__ * 2 + 4)
+     * SSD1306 works with i2c clock up to 1.3 MHz, beyond this value, display may fail.
+     */
+    I2C_SetClockPrescaler(0x10);
+    // Switch alternative port
+    I2C_SetPort(I2C_AlterPort_P32_P33);
+    // Start I2C
+    I2C_SetEnabled(HAL_State_ON);
+
+    // SDA
+    GPIO_P3_SetMode(GPIO_Pin_3, GPIO_Mode_InOut_QBD);
+    // SCL
+    GPIO_P3_SetMode(GPIO_Pin_2, GPIO_Mode_Output_PP);
 }
 
 void begin(uint8_t cols, uint8_t lines, uint8_t dotsize)
@@ -88,8 +105,8 @@ void begin(uint8_t cols, uint8_t lines, uint8_t dotsize)
         _displayfunction |= LCD_5x10DOTS;
     }
 
-    //Wire.begin();
-    //delay(40); // Wait time >40ms After VDD stable
+    // Wire.begin();
+    // delay(40); // Wait time >40ms After VDD stable
 
     // finally, set # lines, font size, etc.
     normalFunctionSet();
@@ -97,7 +114,7 @@ void begin(uint8_t cols, uint8_t lines, uint8_t dotsize)
     extendFunctionSet();
     command(LCD_EX_SETBIASOSC | LCD_BIAS_1_5 | LCD_OSC_183HZ);        // 1/5bias, OSC=183Hz@3.0V
     command(LCD_EX_FOLLOWERCONTROL | LCD_FOLLOWER_ON | LCD_RAB_2_00); // internal follower circuit is turn on
-    //delay(200);                                                       // Wait time >200ms (for power stable)
+    // delay(200);                                                       // Wait time >200ms (for power stable)
     normalFunctionSet();
 
     // turn the display on with no cursor or blinking default
@@ -134,13 +151,13 @@ void setIcon(uint8_t addr, uint8_t bit)
 void clear()
 {
     command(LCD_CLEARDISPLAY); // clear display, set cursor position to zero
-    //delayMicroseconds(2000);   // this command takes a long time!
+    // delayMicroseconds(2000);   // this command takes a long time!
 }
 
 void home()
 {
     command(LCD_RETURNHOME); // set cursor position to zero
-    //delayMicroseconds(2000); // this command takes a long time!
+    // delayMicroseconds(2000); // this command takes a long time!
 }
 
 void setCursor(uint8_t col, uint8_t row)
@@ -236,20 +253,20 @@ void createChar(uint8_t location, uint8_t charmap[])
 
 void command(uint8_t value)
 {
-    //Wire.beginTransmission(_i2c_addr);
-    //Wire.write((uint8_t)0x00);
-    //Wire.write(value);
-    //Wire.endTransmission();
-    //delayMicroseconds(27); // >26.3us
+    // Wire.beginTransmission(_i2c_addr);
+    // Wire.write((uint8_t)0x00);
+    // Wire.write(value);
+    // Wire.endTransmission();
+    // delayMicroseconds(27); // >26.3us
 }
 
 int write(uint8_t value)
 {
-    //Wire.beginTransmission(_i2c_addr);
-    //Wire.write((uint8_t)0x40);
-    //Wire.write(value);
-    //Wire.endTransmission();
-    //delayMicroseconds(27); // >26.3us
+    // Wire.beginTransmission(_i2c_addr);
+    // Wire.write((uint8_t)0x40);
+    // Wire.write(value);
+    // Wire.endTransmission();
+    // delayMicroseconds(27); // >26.3us
 
     return 1;
 }

@@ -33,15 +33,22 @@ PROJECT_NAME=lcd1602-usb-kit
 # specify define
 DEFS       = NO_RUN_TEST
 DEFS += STC8
+DEFS +=__CONF_FOSC=36864000UL                       # The osc/irc frequency you MCU will be running on
+DEFS +=__CONF_MCU_MODEL=MCU_MODEL_STC8H8K64U       # change this to your MCU type
+DEFS +=__CONF_CLKDIV=0x02                           # frequency trimming
+DEFS +=__CONF_IRCBAND=0x03
+DEFS +=__CONF_VRTRIM=0x19
+DEFS +=__CONF_IRTRIM=0x28
+DEFS +=__CONF_LIRTRIM=0x00
 
 # define root dir
 ROOT_DIR     = .
 
 # define include dir
 INCLUDE_DIRS = .
-
+INCLUDE_DIRS += FwLib_STC8/include
 # define lib dir
-LIBDIR   = 
+LIBDIR   = .
 
 # user specific
 
@@ -50,6 +57,7 @@ SRC 	+= Bsp.c
 SRC 	+= st7032.c
 SRC 	+= I2C.c
 SRC 	+= usb.c
+SRC		+= FwLib_STC8/src/fw_i2c.c
 ASM_SRC =
 
 
