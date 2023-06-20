@@ -53,12 +53,10 @@ LIBDIR   = .
 # user specific
 
 SRC 	+= main.c
-SRC 	+= Bsp.c
 SRC 	+= st7032.c
-SRC 	+= I2C.c
-SRC 	+= usb.c
 SRC		+= FwLib_STC8/src/fw_i2c.c
 SRC		+= FwLib_STC8/src/fw_sys.c
+SRC		+= FwLib_STC8/src/fw_usb.c
 ASM_SRC =
 
 
