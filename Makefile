@@ -58,6 +58,7 @@ SRC 	+= st7032.c
 SRC 	+= I2C.c
 SRC 	+= usb.c
 SRC		+= FwLib_STC8/src/fw_i2c.c
+SRC		+= FwLib_STC8/src/fw_sys.c
 ASM_SRC =
 
 
