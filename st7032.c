@@ -258,6 +258,8 @@ void command(uint8_t value)
     // Wire.write(value);
     // Wire.endTransmission();
     // delayMicroseconds(27); // >26.3us
+    I2C_Write(_i2c_addr, 0x00, &value, 1);
+    SYS_DelayUs(27);
 }
 
 int write(uint8_t value)
@@ -267,6 +269,7 @@ int write(uint8_t value)
     // Wire.write(value);
     // Wire.endTransmission();
     // delayMicroseconds(27); // >26.3us
-
+    I2C_Write(_i2c_addr, 0x40, &value, 1);
+    SYS_DelayUs(27);
     return 1;
 }
