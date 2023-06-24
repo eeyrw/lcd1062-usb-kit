@@ -27,6 +27,18 @@
 #include "fw_hal.h"
 // private methods
 
+uint8_t _displayfunction;
+uint8_t _displaycontrol;
+uint8_t _displaymode;
+//  uint8_t _iconfunction;
+
+uint8_t _initialized;
+
+uint8_t _numlines;
+uint8_t _currline;
+
+uint8_t _i2c_addr;
+
 void setDisplayControl(uint8_t setBit)
 {
     _displaycontrol |= setBit;
@@ -65,6 +77,10 @@ void extendFunctionSet()
 
 void st7032_init(uint8_t i2c_addr)
 {
+    GPIO_P1_SetMode(GPIO_Pin_6, GPIO_Mode_Output_PP);
+    P16 =0;
+    SYS_DelayUs(200);    
+    P16 =1;
     _displaycontrol = 0x00;
     _displaymode = 0x00;
     _i2c_addr = i2c_addr;
@@ -77,14 +93,19 @@ void st7032_init(uint8_t i2c_addr)
      */
     I2C_SetClockPrescaler(0x10);
     // Switch alternative port
-    I2C_SetPort(I2C_AlterPort_P32_P33);
+    I2C_SetPort(I2C_AlterPort_P15_P14);
     // Start I2C
     I2C_SetEnabled(HAL_State_ON);
 
     // SDA
-    GPIO_P3_SetMode(GPIO_Pin_3, GPIO_Mode_InOut_QBD);
+    GPIO_P1_SetMode(GPIO_Pin_4, GPIO_Mode_InOut_OD);
     // SCL
-    GPIO_P3_SetMode(GPIO_Pin_2, GPIO_Mode_Output_PP);
+    GPIO_P1_SetMode(GPIO_Pin_5, GPIO_Mode_InOut_OD);
+
+
+
+
+
 }
 
 void begin(uint8_t cols, uint8_t lines, uint8_t dotsize)
@@ -106,7 +127,7 @@ void begin(uint8_t cols, uint8_t lines, uint8_t dotsize)
     }
 
     // Wire.begin();
-    // delay(40); // Wait time >40ms After VDD stable
+    SYS_Delay(40); // Wait time >40ms After VDD stable
 
     // finally, set # lines, font size, etc.
     normalFunctionSet();

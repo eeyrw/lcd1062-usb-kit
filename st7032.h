@@ -122,16 +122,6 @@ void extendFunctionSet();
     uint8_t _enable_pin; // activated by a HIGH pulse.
     uint8_t _data_pins[8];
 */
-uint8_t _displayfunction;
-uint8_t _displaycontrol;
-uint8_t _displaymode;
-//  uint8_t _iconfunction;
 
-uint8_t _initialized;
-
-uint8_t _numlines;
-uint8_t _currline;
-
-uint8_t _i2c_addr;
 
 #endif // __ST7032_H__
