@@ -98,7 +98,8 @@ void usb_write_fifo(BYTE fifo, BYTE *pdat, BYTE cnt)
     }
 }
 
-INTERRUPT(USB_Routine, EXTI_VectUSB)
+void USB_Routine(void) __interrupt(EXTI_VectUSB)
+//INTERRUPT(USB_Routine, EXTI_VectUSB)
 {
     BYTE intrusb;
     BYTE intrin;
@@ -228,7 +229,8 @@ void usb_setup()
         if (csr & OPRDY)
         {
             usb_read_fifo(FIFO0, (BYTE *)&Setup);
-            Setup.wLength = reverse2(Setup.wLength);
+            /* Not reversing here due to SDCC use small endian
+            Setup.wLength = reverse2(Setup.wLength);*/
             switch (Setup.bmRequestType & REQUEST_MASK)
             {
             case STANDARD_REQUEST:

@@ -213,4 +213,6 @@ extern BYTE TxWptr;
 extern BYTE __XDATA RxBuffer[256];
 extern BYTE __XDATA TxBuffer[256];
 
+extern void USB_Routine(void) __interrupt(EXTI_VectUSB);
+
 #endif
