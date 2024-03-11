@@ -47,6 +47,7 @@ ROOT_DIR     = .
 # define include dir
 INCLUDE_DIRS = .
 INCLUDE_DIRS += FwLib_STC8/include
+INCLUDE_DIRS += usbd
 # define lib dir
 LIBDIR   = .
 
@@ -59,6 +60,12 @@ SRC		+= FwLib_STC8/src/fw_i2c.c
 SRC		+= FwLib_STC8/src/fw_sys.c
 SRC		+= FwLib_STC8/src/fw_usb.c
 SRC		+= FwLib_STC8/src/fw_uart.c
+SRC		+= usbd/usb.c
+SRC		+= usbd/usb_desc.c
+SRC		+= usbd/usb_req_class.c
+SRC		+= usbd/usb_req_std.c
+SRC		+= usbd/usb_req_vendor.c
+SRC		+= usbd/util.c
 ASM_SRC =
 
 

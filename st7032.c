@@ -78,9 +78,7 @@ void extendFunctionSet()
 void st7032_init(uint8_t i2c_addr)
 {
     GPIO_P1_SetMode(GPIO_Pin_6, GPIO_Mode_Output_PP);
-    P16 =0;
-    SYS_DelayUs(200);    
-    P16 =1;
+
     _displaycontrol = 0x00;
     _displaymode = 0x00;
     _i2c_addr = i2c_addr;
@@ -91,7 +89,7 @@ void st7032_init(uint8_t i2c_addr)
      * I2C clock = FOSC / 2 / (__prescaler__ * 2 + 4)
      * SSD1306 works with i2c clock up to 1.3 MHz, beyond this value, display may fail.
      */
-    I2C_SetClockPrescaler(0x10);
+    I2C_SetClockPrescaler(0x20);
     // Switch alternative port
     I2C_SetPort(I2C_AlterPort_P15_P14);
     // Start I2C
@@ -125,6 +123,10 @@ void begin(uint8_t cols, uint8_t lines, uint8_t dotsize)
     {
         _displayfunction |= LCD_5x10DOTS;
     }
+
+    P16 =0;
+    SYS_DelayUs(200);    
+    P16 =1;
 
     // Wire.begin();
     SYS_Delay(40); // Wait time >40ms After VDD stable

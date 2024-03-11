@@ -11,6 +11,13 @@
         "bsp.h": "c",
         "registerdefine.h": "c",
         "stc8xxxx_sdcc.h": "c",
-        "string.h": "c"
+        "string.h": "c",
+        "fw_hal.h": "c",
+        "fw_rcc.h": "c",
+        "fw_sys.h": "c",
+        "usb.h": "c",
+        "stc.h": "c",
+        "fw_types.h": "c",
+        "st7032.h": "c"
     }
 }
